@@ -1,0 +1,59 @@
+/* Общие стили */
+body {
+    background-color: #f8f9fa;
+    color: #343a40;
+}
+
+.container {
+    max-width: 800px;
+}
+
+/* Стили для карточек клиник */
+.clinic-card {
+    margin: 10px;
+}
+
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    transition: box-shadow 0.3s, color 0.3s; /* Добавлен переход для цвета текста */
+}
+
+#clinicContainer {
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+.card:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Изменена тень на белую мелкую */
+    color: #336699; /* Изменен цвет текста при наведении */
+}
+
+.card:active {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.2); /* Добавлена тень при нажатии */
+}
+
+.card h2 {
+    margin-top: 15px;
+    font-size: 1.5rem;
+}
+
+.card p {
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.card span {
+    font-size: 2rem;
+    color: #e44d26;
+}
+
+.clinic-link {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.clinic-link:hover {
+    color: #336699;
+    text-decoration: none;
+}

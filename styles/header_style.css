@@ -1,0 +1,25 @@
+body {
+    background-color: #f0f8ff;
+}
+
+.navbar {
+    background-color: #87CEEB; /* Нежно-голубой цвет для навигационной панели */
+}
+
+.navbar-nav .nav-link {
+    color: #4169e1;
+}
+
+.navbar-toggler-icon {
+    background-color: #4169e1;
+}
+
+.btn-outline-light {
+    border-color: #4169e1;
+    color: #4169e1;
+}
+
+.btn-outline-light:hover {
+    background-color: #add8e6;
+    color: #4169e1;
+}
