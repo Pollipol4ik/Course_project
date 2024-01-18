@@ -1,37 +1,35 @@
 <?php
-    // Подключение к базе данных
-    $servername = "localhost";
-    $username_db = "root";
-    $password_db = "root";
-    $dbname = "vet_help";
+session_start();
+require('db_connection.php');
 
-    $conn = new mysqli($servername, $username_db, $password_db, $dbname);
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Обработка формы при отправке
+    $username = $_POST['username'];
+    $email = $_POST['email'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Хеширование пароля
 
-    if ($conn->connect_error) {
-        die("Ошибка подключения: " . $conn->connect_error);
+    // SQL запрос для вставки данных в таблицу
+    $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$password')";
+
+    if ($mysqli->query($sql) === TRUE) {
+        // Получение ID только что добавленного пользователя
+        $user_id = $mysqli->insert_id;
+
+        // Вызов процедуры для добавления открытых чатов с докторами
+        $mysqli->query("CALL RegisterUserWithOpenChats('$username', '$email', '$password')");
+
+        echo "Регистрация успешна!";
+        // Переход на страницу входа
+        header("Location: enter.php", true, 303);
+        exit();
+    } else {
+        echo "Ошибка: " . $sql . "<br>" . $mysqli->error;
     }
+}
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        // Обработка формы при отправке
-        $username = $_POST['username'];
-        $email = $_POST['email'];
-        $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Хеширование пароля
-
-        // SQL запрос для вставки данных в таблицу
-        $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$password')";
-
-        if ($conn->query($sql) === TRUE) {
-            echo "Регистрация успешна!";
-            // Переход на страницу входа
-            header("Location: enter.php", true, 303);
-            exit();
-        } else {
-            echo "Ошибка: " . $sql . "<br>" . $conn->error;
-        }
-    }
-
-    $conn->close();
+$mysqli->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -42,7 +40,7 @@
     <title>Регистрация</title>
 </head>
 <body>
-    <?php include('header.html'); ?>
+    <?php include('header_user.php'); ?>
 
     <div class="container mt-5">
         <div class="row justify-content-center">
@@ -53,7 +51,6 @@
                     </div>
                     <div class="card-body">
                         <form id="registrationForm" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-                            <!-- Добавленный атрибут "method" и "action" -->
                             <div class="form-group">
                                 <label for="username">Имя пользователя:</label>
                                 <input type="text" class="form-control" id="username" name="username" required>
@@ -66,7 +63,7 @@
                                 <label for="password">Пароль:</label>
                                 <input type="password" class="form-control" id="password" name="password" required>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+                            <button type="submit" class="btn btn-info btn-block">Зарегистрироваться</button>
                         </form>
                         <p class="mt-3 text-center">Уже есть аккаунт? <a href="#" class="login-link">Войти</a></p>
                     </div>

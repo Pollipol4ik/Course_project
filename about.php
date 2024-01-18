@@ -1,3 +1,4 @@
+<?php session_start();?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -13,20 +14,18 @@
     <title>О нас</title>
 </head>
 <body>
-    <?php include('header.html'); ?>
+<?php include('header_user.php'); ?>
 
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-6">
-                <h2>О нашем сайте</h2>
+            <h2>О нас</h2>
                 <p>
-                    Добро пожаловать на наш сайт, посвященный быстрой и надежной помощи вашим домашним животным.
-                    Мы стремимся обеспечить комфорт и заботу для ваших питомцев в любых ситуациях.
+                    Добро пожаловать в наше приложение, посвященное обеспечению быстрого и удобного поиска круглосуточных ветеринарных клиник в городе Москва.
+                    Мы предоставляем возможность легко находить ближайшие к вам медицинские учреждения для обеспечения ваших питомцев качественной ветеринарной помощью в случае неотложных ситуаций.
                 </p>
                 <p>
-                    Наша команда профессионалов готова предоставить качественные услуги в области ветеринарной помощи,
-                    тренировки, ухода за животными и многого другого. Мы ценим каждого клиента и заботимся о здоровье и
-                    счастье ваших питомцев.
+                    Наше приложение также предлагает уникальную возможность связи с опытными ветеринарами в различных областях. Вы можете получать консультации и рекомендации от квалифицированных специалистов прямо из дома. Это особенно удобно в ситуациях, когда требуется совет по уходу, кормлению или другим вопросам заботы о животных.
                 </p>
             </div>
             <div class="col-md-6">
@@ -44,18 +43,18 @@
                     </div>
                     <a class="carousel-control-prev" href="#carouselExample" role="button" data-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Previous</span>
+                        <span class="sr-only">Предыдущая</span>
                     </a>
                     <a class="carousel-control-next" href="#carouselExample" role="button" data-slide="next">
                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Next</span>
+                        <span class="sr-only">Следующая</span>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
    

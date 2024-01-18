@@ -1,23 +1,11 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-$servername = "localhost";
-$username = "root";
-$password = "root";
-$dbname = "vet_help";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Ошибка соединения: " . $conn->connect_error);
-}
+session_start();
+require('db_connection.php');
 
 $clinic_id = isset($_GET['clinic_id']) ? $_GET['clinic_id'] : null;
 
 $sqlClinic = "SELECT clinic_name, address, phone_number, clinic_rating, reviews_count, latitude, longitude FROM veterinary_clinic WHERE clinic_id = ?";
-$stmtClinic = $conn->prepare($sqlClinic);
+$stmtClinic = $mysqli->prepare($sqlClinic);
 $stmtClinic->bind_param("i", $clinic_id);
 $stmtClinic->execute();
 $resultClinic = $stmtClinic->get_result();
@@ -30,16 +18,28 @@ if ($resultClinic && $resultClinic->num_rows > 0) {
 }
 
 $sqlComments = "SELECT user_name, comment_text, created_at, rating FROM comments WHERE clinic_id = ?";
-$stmtComments = $conn->prepare($sqlComments);
+$stmtComments = $mysqli->prepare($sqlComments);
 $stmtComments->bind_param("i", $clinic_id);
 $stmtComments->execute();
 $resultComments = $stmtComments->get_result();
 
-$conn->close();
+$isFavorite = false;
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $check_sql = "SELECT * FROM user_favorites WHERE user_id = ? AND clinic_id = ?";
+    $check_stmt = $mysqli->prepare($check_sql);
+    $check_stmt->bind_param("ii", $user_id, $clinic_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    $isFavorite = $check_result->num_rows > 0;
+}
+
+$mysqli->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,60 +48,84 @@ $conn->close();
     <link rel="stylesheet" href="styles/main.css">
     <script src="https://code.jquery.com/jquery-3.6.2.min.js"></script>
     <style>
-    .clinic-details-card {
-        padding: 20px; 
-    }
+        .clinic-details-card {
+            padding: 20px;
+        }
 
-    #map {
-        width: 100%;
-        height: 300px;
-        margin-bottom: 20px;
-    }
+        #map {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+        }
 
-    .rating {
-        text-align: center;
-    }
+        .rating {
+            text-align: center;
+            justify-content: space-between;
+        }
 
-    .rating > input {
-        display: none;
-    }
+        .rating>input {
+            display: none;
+        }
 
-    .rating > label {
-        display: inline-block;
-        padding: 0 5px; /* Чуть больше отступов для звезд */
-        font-size: 24px;
-        line-height: 1.2;
-        cursor: pointer;
-    }
+        .rating>label {
+            display: inline-block;
+            padding: 0 5px;
+            font-size: 24px;
+            line-height: 1.2;
+            cursor: pointer;
+        }
 
-    .rating > label:before {
-        content: '★';
-    }
+        .rating>label:before {
+            content: '★';
+        }
 
-    .rating > label.star {
-        display: inline-block;
-        color: #ddd; /* Цвет незакрашенной звезды */
-    }
+        .rating>label.star {
+            display: inline-block;
+            color: #ddd;
+        }
 
-    .rating > input:checked ~ label.star {
-        color: #ffcc00; /* Цвет закрашенной звезды */
+        .rating>input:checked~label.star {
+            color: #ffcc00;
+        }
+        .card-header {
+            background-color: rgba(0, 0, 255, 0.3) !important;
+        color: #fff ; 
+        padding: 10px;
+        
     }
-</style>
+    </style>
 
 </head>
+
 <body>
-<?php include('header.html'); ?>
+<?php
+    if (isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'doctor') {
+        include('header_doctor.php');
+    } else {
+        include('header_user.php'); 
+    }
+    ?>
     <div class="container">
         <h1 class="mt-5 mb-4">Детали клиники</h1>
 
         <!-- Карта с одной отметкой -->
         <div id="map"></div>
 
-        <div class="card mb-4 shadow-sm clinic-details-card">
+        <div class="card mb-5 shadow-sm clinic-details-card">
             <h2 class="text-center mt-3"><?php echo $clinicDetails['clinic_name']; ?></h2>
             <p class="text-center">Рейтинг: <span class="rating"><?php echo $clinicDetails['clinic_rating']; ?></span> (<?php echo $clinicDetails['reviews_count']; ?> отзывов)</p>
             <p class="text-center">Адрес: <?php echo $clinicDetails['address']; ?></p>
-            <p class="text-center">Телефон: <?php echo $clinicDetails['phone_number']; ?></p>
+            <p class="text-center">Телефон: <?php echo $clinicDetails['phone_number']; ?> </p>
+            <!-- Добавление в избранное -->
+            <div class="text-right mt-2">
+                <?php
+                if (isset($_SESSION['user_id'])) {
+                    $heartIcon = $isFavorite ? '❤️' : '🤍';
+                    $toggleFavoriteUrl = "favourite.php?clinic_id=" . $clinic_id;
+                    echo "<a href=\"$toggleFavoriteUrl\">$heartIcon </a>";
+                }
+                ?>
+            </div>
         </div>
 
         <div class="card mt-4 mb-4 shadow-sm">
@@ -112,7 +136,7 @@ $conn->close();
                 foreach ($resultComments as $comment) {
                     echo '<div class="card-body">';
                     echo '<div class="card">';
-                    echo '<div class="card-header">' . $comment['user_name'] . ' - ' . $comment['created_at'] . ' - Рейтинг: ' . $comment['rating'] . ' ★</div>';
+                    echo '<div class="card-header" >' . $comment['user_name'] . ' - ' . $comment['created_at'] . ' - Рейтинг: ' . $comment['rating'] . ' ★</div>';
                     echo '<div class="card-body">';
                     echo '<p class="card-text">' . $comment['comment_text'] . '</p>';
                     echo '</div>';
@@ -124,28 +148,41 @@ $conn->close();
 
             <?php
             $userLoggedIn = isset($_SESSION['user_id']);
+            $isDoctor = isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'doctor';
 
-            if ($userLoggedIn) {
+            if ($userLoggedIn && !$isDoctor) {
                 $userName = $_SESSION['user_name'];
+                ?>
+                <form action="post_comment.php?clinic_id=<?= $clinic_id ?>" method="post">
+                    <label for="rating" class="col-md-10 col-form-label">Рейтинг:</label>
+                    <div class="rating">
+                    <?php
+                        for ($i = 5; $i >= 1; $i--) {
+                            echo '<input type="radio" id="star' . $i . '" name="rating" value="' . $i . '" /><label for="star' . $i . '" class="star"></label>';
+                        }
+                        ?>
 
-                echo '<form action="post_comment.php?clinic_id=' . $clinic_id . '" method="post">';
-                echo '<label for="rating">Рейтинг:</label>';
-                echo '<div class="rating">';
-                for ($i = 5; $i >= 1; $i--) {
-                    echo '<input type="radio" id="star' . $i . '" name="rating" value="' . $i . '" /><label for="star' . $i . '" class="star"></label>';
-                }
-                echo '</div>';
-                echo '<label for="comment">Написать комментарий:</label>';
-                echo '<textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>';
-                echo '<input type="hidden" id="rating_value" name="rating_value" value="">
-                ';
-                echo '<button type="submit" class="btn btn-primary mt-3">Оставить комментарий</button>';
-                echo '</form>';
-
+                    </div>
+                        <label for="comment" class="col-md-10 col-form-label">Написать комментарий:</label>
+                        <div class="col-md-12">
+                            <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                        </div>
+                        <input type="hidden" id="rating_value" name="rating_value" value="">
+                        <div class="col-md-12 mt-3 mb-3">
+                            <button type="submit" class="btn btn-info">Оставить комментарий</button>
+                        </div>
+                </form>
+                <?php
                 echo '</div>';
             } else {
                 echo '<div class="card-body">';
-                echo '<p class="text-center">Чтобы оставить комментарий, вам нужно <a href="enter.php">войти</a>.</p>';
+                echo '<p class="text-center">';
+                if (!$userLoggedIn) {
+                    echo 'Чтобы оставить комментарий, вам нужно <a href="enter.php">войти</a>.';
+                } else {
+                    echo 'Докторам запрещено оставлять комментарии.';
+                }
+                echo '</p>';
                 echo '</div>';
             }
             ?>
@@ -189,6 +226,7 @@ $conn->close();
         });
     </script>
 
-    <?php include('footer.html');?>
+    <?php include('footer.html'); ?>
 </body>
+
 </html>

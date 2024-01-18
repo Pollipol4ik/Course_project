@@ -1,25 +1,25 @@
 <?php
 session_start();
-
-$servername = "localhost";
-$username = "root";
-$password = "root";
-$dbname = "vet_help";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Ошибка соединения: " . $conn->connect_error);
-}
+require('db_connection.php');
 
 $sortOrder = isset($_GET['sort']) ? $_GET['sort'] : '';
+$searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
 
 if (!$sortOrder) {
     $sortOrder = 'desc';
 }
 
-$sql = "SELECT clinic_id, clinic_name, address, phone_number, clinic_rating, reviews_count, latitude, longitude FROM veterinary_clinic ORDER BY clinic_rating $sortOrder";
-$result = $conn->query($sql);
+// Используйте метод getConnection() для получения соединения
+$mysqli = $database->getConnection();
+
+$sql = "SELECT clinic_id, clinic_name, address, phone_number, clinic_rating, reviews_count, latitude, longitude FROM veterinary_clinic";
+
+if ($searchQuery) {
+    $sql .= " WHERE clinic_name LIKE '%$searchQuery%'";
+}
+
+$sql .= " ORDER BY clinic_rating $sortOrder";
+$result = $mysqli->query($sql);
 
 // Получение всех строк в виде массива
 $clinics = [];
@@ -30,14 +30,14 @@ while ($row = $result->fetch_assoc()) {
 // Определение типа пользователя на основе информации о сеансе
 $userType = isset($_SESSION['user_type']) ? $_SESSION['user_type'] : 'user';
 
-// Функция для проверки, добавлена ли клиника в избранное
-function checkFavorite($conn, $clinic_id, $user_id) {
+function checkFavorite($mysqli, $clinic_id, $user_id) {
     $check_sql = "SELECT * FROM user_favorites WHERE user_id = $user_id AND clinic_id = $clinic_id";
-    $check_result = $conn->query($check_sql);
+    $check_result = $mysqli->query($check_sql);
     return $check_result->num_rows > 0;
 }
 
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -59,28 +59,72 @@ function checkFavorite($conn, $clinic_id, $user_id) {
             height: 490px;
             z-index: 1;
         }
+
+        #searchResults {
+            position: absolute;
+            background: white;
+            z-index: 2;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            display: none;
+        }
+
+        #searchResults a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #searchResults a:hover {
+            background-color: #f9f9f9;
+        }
     </style>
 
     <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=82cdccb4-9063-4998-a32d-a21e21da55a7" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
 <?php
-// Включение соответствующего заголовка в зависимости от типа пользователя
+
 if ($userType === 'doctor') {
-    include('header_doctor.html');
+    include('header_doctor.php');
 } else {
-    include('header.html');
+    include('header_user.php');
 }
 ?>
 
 <div class="container">
-    <h1 class="mt-5 mb-4">Круглосуточные ветеринарные клиники</h1>
+    <h1 class="mt-5 mb-4">Круглосуточные ветеринарные клиники в г.Москва</h1>
+    <p>
+        Добро пожаловать на страницу "Ветеринарные клиники". Здесь вы можете найти информацию о круглосуточных ветеринарных клиниках в городе Москва.
+        Выберите врачебное учреждение из списка ниже, чтобы узнать подробности, включая рейтинг, адрес, и отзывы о клинике. 
+        Если вы зарегистрированы на сайте, вы также можете добавлять клиники в избранное для более удобного доступа.
+    </p>
+
+    <!-- Форма поиска -->
+<div class="mb-3 d-flex">
+    <form class="flex-grow-1 mr-2" method="get">
+        <label for="search">Поиск по названию:</label>
+        <div class="input-group">
+            <input type="text" id="search" name="search" class="form-control" value="<?php echo htmlspecialchars($searchQuery); ?>">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Искать</button>
+            </div>
+        </div>
+    </form>
+    <div id="searchResults"></div>
+</div>
+
 
     <!-- Форма сортировки -->
     <div class="mb-3">
         <form method="get">
-            <label for="sort">Сортировать по:</label>
+            <label for="sort">Сортировать по рейтингу:</label>
             <select id="sort" name="sort" class="form-control" onchange="this.form.submit()">
                 <option value="" <?php if($sortOrder == '') echo 'selected'; ?>>По умолчанию</option>
                 <option value="asc" <?php if($sortOrder == 'asc') echo 'selected'; ?>>По возрастанию</option>
@@ -93,29 +137,27 @@ if ($userType === 'doctor') {
         <!-- Колонка с картами клиник -->
         <div id="clinicContainer" class="col-md-6">
             <?php
-            // Отображение карточек клиник
             foreach ($clinics as $clinic) {
-                $isFavorite = isset($_SESSION['user_id']) && $userType !== 'doctor' ? checkFavorite($conn, $clinic['clinic_id'], $_SESSION['user_id']) : false;
+                $isFavorite = isset($_SESSION['user_id']) && $userType !== 'doctor' ? checkFavorite($mysqli, $clinic['clinic_id'], $_SESSION['user_id']) : false;
                 ?>
                 <div class="clinic-card">
                     <div class="card mb-4 shadow-sm">
-                        <!-- Ссылка на страницу с деталями клиники с параметром clinic_id -->
                         <a href="clinic_details.php?clinic_id=<?php echo $clinic['clinic_id']; ?>" class="clinic-link">
                             <div class="text-center mt-3">
                                 <h2><?php echo $clinic['clinic_name']; ?></h2>
                                 <p class="mb-0">Рейтинг: <?php echo $clinic['clinic_rating']; ?>★</p>
                             </div>
                         </a>
-                        <!-- Отображение иконки для добавления в избранное, только если пользователь не доктор -->
                         <div class="text-right mt-2">
                             <?php
                             if ($userType !== 'doctor') {
                                 if (isset($_SESSION['user_id'])) {
                                     $heartIcon = $isFavorite ? '❤️' : '🤍';
+                                    
                                     $toggleFavoriteUrl = "favourite.php?clinic_id=" . $clinic['clinic_id'];
                                     echo "<a href=\"$toggleFavoriteUrl\">$heartIcon </a>";
                                 } else {
-                                    echo '<a href="registration.php">❤️ Зарегистрируйтесь, чтобы добавить в избранное</a>';
+                                    echo '<a href="registration.php">Необходимо войти или зарегистрироваться   🤍</a>';
                                 }
                             }
                             ?>
@@ -126,7 +168,6 @@ if ($userType === 'doctor') {
             }
             ?>
         </div>
-
         <!-- Контейнер карты -->
         <div class="col-md-6">
             <div id="map"></div>
@@ -134,20 +175,18 @@ if ($userType === 'doctor') {
     </div>
 </div>
 
-<!-- Скрипты Bootstrap и jQuery -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.2.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-<!-- Скрипт Яндекс.Карты -->
 <script type="text/javascript">
     ymaps.ready(init);
     var myMap;
 
     function init() {
         myMap = new ymaps.Map("map", {
-            center: [55.7558, 37.6176], // Координаты центра карты
-            zoom: 13 // Масштаб карты
+            center: [55.7558, 37.6176], 
+            zoom: 12 
         });
 
         myMap.controls.add(
@@ -171,6 +210,27 @@ if ($userType === 'doctor') {
             echo "myMap.geoObjects.add(placemark" . $clinic['clinic_id'] . ");";
         }
         ?>
+
+        // AJAX для динамического поиска
+        $('#search').on('input', function() {
+            var searchQuery = $(this).val();
+            if (searchQuery.length >= 3) {
+                $.ajax({
+                    url: 'ajax_search.php', // Создайте файл ajax_search.php для обработки AJAX-запроса
+                    type: 'GET',
+                    data: { search: searchQuery },
+                    success: function(response) {
+                        $('#searchResults').html(response);
+                        $('#searchResults').show();
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            } else {
+                $('#searchResults').hide();
+            }
+        });
     }
 </script>
 

@@ -11,20 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userId = $_SESSION['user_id'];
     $userName = $_SESSION['user_name'];
 
-    $servername = "localhost";
-    $username = "root";
-    $password = "root";
-    $dbname = "vet_help";
-    $conn = new mysqli($servername, $username, $password, $dbname);
-
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
+    require('db_connection.php');
 
     $clinic_id = isset($_GET['clinic_id']) ? $_GET['clinic_id'] : null;
 
     // Insert new comment
-    $stmtInsertComment = $conn->prepare("INSERT INTO comments (clinic_id, user_id, user_name, comment_text, rating) VALUES (?, ?, ?, ?, ?)");
+    $stmtInsertComment = $mysqli->prepare("INSERT INTO comments (clinic_id, user_id, user_name, comment_text, rating) VALUES (?, ?, ?, ?, ?)");
     $stmtInsertComment->bind_param("iissi", $clinic_id, $userId, $userName, $commentText, $_POST['rating_value']);
 
     if (!$stmtInsertComment->execute()) {
@@ -35,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmtInsertComment->close();
 
     // Update the average rating and reviews count in the veterinary clinic table
-    $stmtUpdateClinicRating = $conn->prepare("UPDATE veterinary_clinic SET clinic_rating = (SELECT AVG(rating) FROM comments WHERE clinic_id = ?), reviews_count = (SELECT COUNT(*) FROM comments WHERE clinic_id = ?) WHERE clinic_id = ?");
+    $stmtUpdateClinicRating = $mysqli->prepare("UPDATE veterinary_clinic SET clinic_rating = (SELECT AVG(rating) FROM comments WHERE clinic_id = ?), reviews_count = (SELECT COUNT(*) FROM comments WHERE clinic_id = ?) WHERE clinic_id = ?");
     $stmtUpdateClinicRating->bind_param("iii", $clinic_id, $clinic_id, $clinic_id);
 
     if (!$stmtUpdateClinicRating->execute()) {
@@ -45,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmtUpdateClinicRating->close();
 
-    $conn->close();
+    $mysqli->close();
 
     header("Location: clinic_details.php?clinic_id=$clinic_id");
     exit();
