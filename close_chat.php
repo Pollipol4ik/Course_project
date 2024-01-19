@@ -3,7 +3,6 @@ session_start();
 require('db_connection.php');
 include('db_functions.php');
 
-// Используйте метод getConnection() для получения соединения
 $mysqli = $database->getConnection();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

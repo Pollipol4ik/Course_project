@@ -25,14 +25,13 @@ function closeChat($mysqli, $userId, $doctorId) {
 
 function isChatOpen($mysqli, $userId, $doctorId) {
     try {
-        // Не закрываем соединение здесь
         $checkChatSql = "SELECT * FROM user_chats WHERE user_id = ? AND doctor_id = ? AND status = 'open'";
         $stmt = $mysqli->prepare($checkChatSql);
         $stmt->bind_param("ss", $userId, $doctorId);
 
         if ($stmt->execute()) {
             $result = $stmt->get_result();
-            $stmt->close(); // Закрываем здесь после получения результата
+            $stmt->close(); 
             return ($result->num_rows > 0);
         } else {
             throw new Exception("Ошибка при проверке статуса чата.");
@@ -44,7 +43,6 @@ function isChatOpen($mysqli, $userId, $doctorId) {
 
 function updateChatStatus($mysqli, $userId, $doctorId, $status) {
     try {
-        // Предположим, что у вас есть соответствующий столбец в таблице user_chats для статуса чата
         $updateSql = "UPDATE user_chats SET status = ? WHERE user_id = ? AND doctor_id = ?";
         $stmt = $mysqli->prepare($updateSql);
         $stmt->bind_param("sss", $status, $userId, $doctorId);

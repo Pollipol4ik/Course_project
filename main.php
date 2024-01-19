@@ -4,6 +4,8 @@ require('db_connection.php');
 
 $sortOrder = isset($_GET['sort']) ? $_GET['sort'] : '';
 $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
+$selectedAdmArea = isset($_GET['admArea']) ? $_GET['admArea'] : '';
+$selectedDistrict = isset($_GET['district']) ? $_GET['district'] : '';
 
 if (!$sortOrder) {
     $sortOrder = 'desc';
@@ -12,10 +14,42 @@ if (!$sortOrder) {
 // Используйте метод getConnection() для получения соединения
 $mysqli = $database->getConnection();
 
+// Получите уникальные значения из столбца AdmArea
+$admAreasQuery = "SELECT DISTINCT AdmArea FROM veterinary_clinic";
+$admAreasResult = $mysqli->query($admAreasQuery);
+$admAreas = [];
+while ($row = $admAreasResult->fetch_assoc()) {
+    $admAreas[] = $row['AdmArea'];
+}
+
+// Получите уникальные значения из столбца District
+$districtsQuery = "SELECT DISTINCT District FROM veterinary_clinic";
+$districtsResult = $mysqli->query($districtsQuery);
+$districts = [];
+while ($row = $districtsResult->fetch_assoc()) {
+    $districts[] = $row['District'];
+}
+
 $sql = "SELECT clinic_id, clinic_name, address, phone_number, clinic_rating, reviews_count, latitude, longitude FROM veterinary_clinic";
 
-if ($searchQuery) {
-    $sql .= " WHERE clinic_name LIKE '%$searchQuery%'";
+// Добавляем условия для фильтрации по округам и районам
+if ($searchQuery || $selectedAdmArea || $selectedDistrict) {
+    $sql .= " WHERE";
+
+    if ($searchQuery) {
+        $sql .= " clinic_name LIKE '%$searchQuery%' AND";
+    }
+
+    if ($selectedAdmArea) {
+        $sql .= " AdmArea = '$selectedAdmArea' AND";
+    }
+
+    if ($selectedDistrict) {
+        $sql .= " District = '$selectedDistrict' AND";
+    }
+
+    // Убираем последний "AND"
+    $sql = rtrim($sql, ' AND');
 }
 
 $sql .= " ORDER BY clinic_rating $sortOrder";
@@ -35,9 +69,7 @@ function checkFavorite($mysqli, $clinic_id, $user_id) {
     $check_result = $mysqli->query($check_sql);
     return $check_result->num_rows > 0;
 }
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -84,7 +116,7 @@ function checkFavorite($mysqli, $clinic_id, $user_id) {
         }
     </style>
 
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=82cdccb4-9063-4998-a32d-a21e21da55a7" type="text/javascript"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=d272ae8d-e320-465e-8470-c7fcce88863c" type="text/javascript"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -99,29 +131,28 @@ if ($userType === 'doctor') {
 ?>
 
 <div class="container">
-    <h1 class="mt-5 mb-4">Круглосуточные ветеринарные клиники в г.Москва</h1>
+    <h1 class="mt-5 mb-4">Ветеринарные клиники в г.Москва</h1>
     <p>
-        Добро пожаловать на страницу "Ветеринарные клиники". Здесь вы можете найти информацию о круглосуточных ветеринарных клиниках в городе Москва.
-        Выберите врачебное учреждение из списка ниже, чтобы узнать подробности, включая рейтинг, адрес, и отзывы о клинике. 
+        Добро пожаловать на страницу "Ветеринарные клиники". Здесь вы можете найти информацию о ветеринарных клиниках в городе Москва.
+        Выберите врачебное учреждение из списка ниже, чтобы узнать подробности, включая рейтинг, адрес, и отзывы о клинике.
         Если вы зарегистрированы на сайте, вы также можете добавлять клиники в избранное для более удобного доступа.
     </p>
 
     <!-- Форма поиска -->
-<div class="mb-3 d-flex">
-    <form class="flex-grow-1 mr-2" method="get">
-        <label for="search">Поиск по названию:</label>
-        <div class="input-group">
-            <input type="text" id="search" name="search" class="form-control" value="<?php echo htmlspecialchars($searchQuery); ?>">
-            <div class="input-group-append">
-                <button type="submit" class="btn btn-primary">Искать</button>
+    <div class="mb-3 d-flex">
+        <form class="flex-grow-1 mr-2" method="get">
+            <label for="search">Поиск по названию:</label>
+            <div class="input-group">
+                <input type="text" id="search" name="search" class="form-control" value="<?php echo htmlspecialchars($searchQuery); ?>">
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary">Искать</button>
+                </div>
             </div>
-        </div>
-    </form>
-    <div id="searchResults"></div>
-</div>
+        </form>
+        <div id="searchResults"></div>
+    </div>
 
-
-    <!-- Форма сортировки -->
+    <!-- Форма сортировки и фильтрации -->
     <div class="mb-3">
         <form method="get">
             <label for="sort">Сортировать по рейтингу:</label>
@@ -129,6 +160,28 @@ if ($userType === 'doctor') {
                 <option value="" <?php if($sortOrder == '') echo 'selected'; ?>>По умолчанию</option>
                 <option value="asc" <?php if($sortOrder == 'asc') echo 'selected'; ?>>По возрастанию</option>
                 <option value="desc" <?php if($sortOrder == 'desc') echo 'selected'; ?>>По убыванию</option>
+            </select>
+
+            <!-- Выпадающий список для фильтрации по округам -->
+            <label for="admArea" class="ml-3">Фильтровать по округу:</label>
+            <select id="admArea" name="admArea" class="form-control" onchange="this.form.submit()">
+                <option value="" <?php if (!$selectedAdmArea) echo 'selected'; ?>>Все округа</option>
+                <?php foreach ($admAreas as $admAreaOption) : ?>
+                    <option value="<?php echo $admAreaOption; ?>" <?php if ($selectedAdmArea == $admAreaOption) echo 'selected'; ?>>
+                        <?php echo $admAreaOption; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <!-- Выпадающий список для фильтрации по районам -->
+            <label for="district" class="ml-3">Фильтровать по району:</label>
+            <select id="district" name="district" class="form-control" onchange="this.form.submit()">
+                <option value="" <?php if (!$selectedDistrict) echo 'selected'; ?>>Все районы</option>
+                <?php foreach ($districts as $districtOption) : ?>
+                    <option value="<?php echo $districtOption; ?>" <?php if ($selectedDistrict == $districtOption) echo 'selected'; ?>>
+                        <?php echo $districtOption; ?>
+                    </option>
+                <?php endforeach; ?>
             </select>
         </form>
     </div>
@@ -153,7 +206,7 @@ if ($userType === 'doctor') {
                             if ($userType !== 'doctor') {
                                 if (isset($_SESSION['user_id'])) {
                                     $heartIcon = $isFavorite ? '❤️' : '🤍';
-                                    
+
                                     $toggleFavoriteUrl = "favourite.php?clinic_id=" . $clinic['clinic_id'];
                                     echo "<a href=\"$toggleFavoriteUrl\">$heartIcon </a>";
                                 } else {
@@ -194,7 +247,6 @@ if ($userType === 'doctor') {
         );
 
         <?php
-        // Добавление кода JavaScript для создания маркеров для каждой клиники
         foreach ($clinics as $clinic) {
             echo "var placemark" . $clinic['clinic_id'] . " = new ymaps.Placemark([" . $clinic['latitude'] . ", " . $clinic['longitude'] . "], {
                 balloonContent: '<div class=\"ya_map\"><a href=\"clinic_details.php?clinic_id=" . $clinic['clinic_id'] . "\">" . $clinic['clinic_name'] . "</a></div>'
@@ -211,12 +263,11 @@ if ($userType === 'doctor') {
         }
         ?>
 
-        // AJAX для динамического поиска
         $('#search').on('input', function() {
             var searchQuery = $(this).val();
             if (searchQuery.length >= 3) {
                 $.ajax({
-                    url: 'ajax_search.php', // Создайте файл ajax_search.php для обработки AJAX-запроса
+                    url: 'ajax_search.php', 
                     type: 'GET',
                     data: { search: searchQuery },
                     success: function(response) {

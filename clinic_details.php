@@ -196,7 +196,7 @@ $mysqli->close();
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <!-- Скрипт Яндекс Карты -->
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=82cdccb4-9063-4998-a32d-a21e21da55a7" type="text/javascript"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=d272ae8d-e320-465e-8470-c7fcce88863c" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             $('.rating input').on('change', function () {

@@ -2,7 +2,7 @@
 session_start();
 require('db_connection.php');
 
-// Проверка существования сессии врача
+
 if (!isset($_SESSION['doctor_id'])) {
     header("Location: enter.php");
     exit();
@@ -13,7 +13,7 @@ $doctorId = $_SESSION['doctor_id'];
 // Определение параметра сортировки
 $sortOrder = isset($_GET['sort']) ? $_GET['sort'] : 'default';
 
-// SQL-запрос с учетом сортировки
+
 $sql = "SELECT DATE(created_at) AS date, COUNT(*) AS messages_count
         FROM messages
         WHERE doctor_id = ?
@@ -35,7 +35,7 @@ while ($row = $result->fetch_assoc()) {
     $messageCounts[] = $row['messages_count'];
 }
 
-// Получение имени врача для обращения
+
 $sqlDoctorName = "SELECT full_name FROM doctors WHERE doctor_id = ?";
 $stmtDoctorName = $mysqli->prepare($sqlDoctorName);
 $stmtDoctorName->bind_param("i", $doctorId);
@@ -44,7 +44,7 @@ $resultDoctorName = $stmtDoctorName->get_result();
 $stmtDoctorName->close();
 $doctorName = ($resultDoctorName->num_rows > 0) ? $resultDoctorName->fetch_assoc()['full_name'] : 'Уважаемый врач';
 
-// Закрытие соединения с базой данных
+
 $mysqli->close();
 
 // Вычисление характеристик
@@ -61,7 +61,7 @@ $minMessages = min($messageCounts);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Активность врача: <?= htmlspecialchars($doctorName) ?></title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/footer.css">
     <style>
         .badge-danger {
             background-color: #dc3545;
@@ -86,7 +86,12 @@ $minMessages = min($messageCounts);
             margin-left: 5px;
         }
     </style>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+    
 </head>
 <body>
     <?php include('header_doctor.php'); ?>
@@ -116,7 +121,7 @@ $minMessages = min($messageCounts);
             </div>
             <div class="col-md-4">
                 <h4 class="mb-3">Статистика за месяц:</h4>
-                <!-- Обозначения цветов -->
+                
                 <div class="color-mark" style="background-color: #dc3545 !important;"></div> <span class="font-weight-bold">Сильная недоработка</span><br>
                 <div class="color-mark" style="background-color: #ffc107 !important;"></div> <span class="font-weight-bold">Незначительная недоработка</span><br>
                 <div class="color-mark" style="background-color: #28a745 !important;"></div> <span class="font-weight-bold">Норма</span><br>
@@ -130,16 +135,16 @@ $minMessages = min($messageCounts);
                 $badgeDescription = '';
 
                 if ($messageCount < 10) {
-                    $badgeClass = 'badge-danger'; // Красный
+                    $badgeClass = 'badge-danger'; 
                     $badgeDescription = 'Низкое количество сообщений';
                 } elseif ($messageCount >= 10 && $messageCount < 15) {
-                    $badgeClass = 'badge-warning'; // Желтый
+                    $badgeClass = 'badge-warning'; 
                     $badgeDescription = 'Среднее количество сообщений';
                 } elseif ($messageCount >= 15 && $messageCount < 20) {
-                    $badgeClass = 'badge-success'; // Зеленый
+                    $badgeClass = 'badge-success'; 
                     $badgeDescription = 'Высокое количество сообщений';
                 } else {
-                    $badgeClass = 'badge-primary'; // Синий
+                    $badgeClass = 'badge-primary';
                     $badgeDescription = 'Очень высокое количество сообщений';
                 }
                 ?>
@@ -219,12 +224,13 @@ $minMessages = min($messageCounts);
         });
     </script>
 
-    
+<?php include('footer.html'); ?>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
 
-    <?php include('footer.html'); ?>
+    
 </body>
+
 </html>

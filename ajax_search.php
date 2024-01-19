@@ -5,11 +5,10 @@ require('db_connection.php');
 // Получение поискового запроса из GET-параметра
 $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
 
-// Подготовка SQL-запроса для поиска
 $sql = "SELECT clinic_id, clinic_name FROM veterinary_clinic WHERE clinic_name LIKE '%$searchQuery%'";
 $result = $mysqli->query($sql);
 
-// Формирование HTML-результата
+
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $clinic_id = $row['clinic_id'];
@@ -20,6 +19,5 @@ if ($result->num_rows > 0) {
     echo "Ничего не найдено";
 }
 
-// Закрытие соединения с базой данных
 $mysqli->close();
 ?>

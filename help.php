@@ -110,6 +110,14 @@ if ($userId) {
             font-weight: bold;
             color: red;
         }
+        #chatModal .modal-dialog {
+        max-width: 800px; /* Set the desired width */
+    }
+
+    #chatModal .modal-body {
+        max-height: 700px; /* Set the desired height */
+        overflow-y: auto; /* Add a vertical scrollbar if needed */
+    }
     </style>
 </head>
 <body>
@@ -201,7 +209,7 @@ if ($userId) {
                 </div>
                 <div class="modal-footer">
                     <form id="messageForm">
-                        <textarea id="messageInput" rows="4" cols="60" class="form-control" placeholder="Введите ваше сообщение..."></textarea>
+                        <textarea id="messageInput" rows="4" cols="110" class="form-control" placeholder="Введите ваше сообщение..."></textarea>
                         <button type="submit" class="btn btn-info mt-2">Отправить</button>
                         <button type="button" class="btn btn-danger mt-2" id="closeChatBtn">Закрыть чат</button>
                     </form>

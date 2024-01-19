@@ -32,7 +32,7 @@ if (isset($_GET['clinic_id'])) {
 
 // Получаем избранные клиники для текущего пользователя
 $user_id = $_SESSION['user_id'];
-$sql = "SELECT vc.clinic_id, vc.clinic_name, vc.address, vc.phone_number, vc.rating_percentage, vc.reviews_count, vc.clinic_rating
+$sql = "SELECT vc.clinic_id, vc.clinic_name, vc.address, vc.phone_number, vc.reviews_count, vc.clinic_rating
         FROM veterinary_clinic vc
         INNER JOIN user_favorites uf ON vc.clinic_id = uf.clinic_id
         WHERE uf.user_id = $user_id";
