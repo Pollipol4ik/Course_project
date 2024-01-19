@@ -8,11 +8,11 @@ $mysqli = $database->getConnection();
 
 $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
-// Получаем список врачей
+
 $sqlDoctors = "SELECT * FROM doctors";
 $resultDoctors = $mysqli->query($sqlDoctors);
 
-// Загружаем сообщения пользователя
+
 if ($userId) {
     $sqlMessages = "SELECT uc.*, d.full_name AS doctor_name 
                     FROM user_chats uc
@@ -111,12 +111,12 @@ if ($userId) {
             color: red;
         }
         #chatModal .modal-dialog {
-        max-width: 800px; /* Set the desired width */
+        max-width: 800px; 
     }
 
     #chatModal .modal-body {
-        max-height: 700px; /* Set the desired height */
-        overflow-y: auto; /* Add a vertical scrollbar if needed */
+        max-height: 700px; 
+        overflow-y: auto; 
     }
     </style>
 </head>
@@ -231,7 +231,7 @@ if ($userId) {
             });
 
             $('#messageForm').submit(function (event) {
-                event.preventDefault(); // Предотвращаем стандартное поведение формы
+                event.preventDefault(); 
                 var message = $('#messageInput').val();
                 var doctorId = $('#chatModal').data('doctor-id');
                 sendMessage(doctorId, message);
@@ -267,10 +267,10 @@ if ($userId) {
                 data: { doctorId: doctorId, message: message },
                 success: function (response) {
                     if (response === "success") {
-                        // Обновите чат после успешной отправки сообщения
+                       
                         loadChat(doctorId);
 
-                        // Очистите поле ввода сообщения после успешной отправки
+                        
                         $('#messageInput').val('');
                     } else {
                         alert('Ошибка отправки сообщения.');
@@ -307,7 +307,7 @@ if ($userId) {
                 method: 'POST',
                 data: { doctor_id: doctorId },
                 success: function (response) {
-                    console.log(response); // Проверьте ответ в консоли
+                    console.log(response); 
                     if (response === "success") {
                         alert('Чат успешно возобновлен.');
                         loadChat(doctorId);

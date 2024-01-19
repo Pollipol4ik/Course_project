@@ -16,8 +16,8 @@
             color: #87CEFA;
         }
         .user-name {
-            color: #FFFF00 !important; /* Цвет текста имени пользователя */
-            margin-right: 15px; /* Отступ справа для выравнивания с кнопкой "Выйти" */
+            color: #FFFF00 !important; 
+            margin-right: 15px; 
         }
     </style>
 </head>

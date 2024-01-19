@@ -11,10 +11,8 @@ if (!$sortOrder) {
     $sortOrder = 'desc';
 }
 
-// Используйте метод getConnection() для получения соединения
 $mysqli = $database->getConnection();
 
-// Получите уникальные значения из столбца AdmArea
 $admAreasQuery = "SELECT DISTINCT AdmArea FROM veterinary_clinic";
 $admAreasResult = $mysqli->query($admAreasQuery);
 $admAreas = [];
@@ -22,7 +20,6 @@ while ($row = $admAreasResult->fetch_assoc()) {
     $admAreas[] = $row['AdmArea'];
 }
 
-// Получите уникальные значения из столбца District
 $districtsQuery = "SELECT DISTINCT District FROM veterinary_clinic";
 $districtsResult = $mysqli->query($districtsQuery);
 $districts = [];
@@ -48,20 +45,19 @@ if ($searchQuery || $selectedAdmArea || $selectedDistrict) {
         $sql .= " District = '$selectedDistrict' AND";
     }
 
-    // Убираем последний "AND"
+    
     $sql = rtrim($sql, ' AND');
 }
 
 $sql .= " ORDER BY clinic_rating $sortOrder";
 $result = $mysqli->query($sql);
 
-// Получение всех строк в виде массива
 $clinics = [];
 while ($row = $result->fetch_assoc()) {
     $clinics[] = $row;
 }
 
-// Определение типа пользователя на основе информации о сеансе
+
 $userType = isset($_SESSION['user_type']) ? $_SESSION['user_type'] : 'user';
 
 function checkFavorite($mysqli, $clinic_id, $user_id) {

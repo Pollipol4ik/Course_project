@@ -6,7 +6,7 @@ if (isset($_SESSION['user_id']) && isset($_POST['doctorId'])) {
     $userId = $_SESSION['user_id'];
     $doctorId = $_POST['doctorId'];
 
-    // Загрузка сообщений между пользователем и врачом
+    
     $sql = "SELECT m.*, d.full_name AS doctor_name FROM messages m
             JOIN doctors d ON m.doctor_id = d.doctor_id
             WHERE (m.user_id = $userId AND m.doctor_id = $doctorId) OR (m.user_id = $doctorId AND m.doctor_id = $userId)

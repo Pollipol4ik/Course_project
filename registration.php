@@ -3,23 +3,23 @@ session_start();
 require('db_connection.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Обработка формы при отправке
+    
     $username = $_POST['username'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Хеширование пароля
 
-    // SQL запрос для вставки данных в таблицу
+    
     $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$password')";
 
     if ($mysqli->query($sql) === TRUE) {
-        // Получение ID только что добавленного пользователя
+        
         $user_id = $mysqli->insert_id;
 
         // Вызов процедуры для добавления открытых чатов с докторами
         $mysqli->query("CALL RegisterUserWithOpenChats('$username', '$email', '$password')");
 
         echo "Регистрация успешна!";
-        // Переход на страницу входа
+        
         header("Location: enter.php", true, 303);
         exit();
     } else {

@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $clinic_id = isset($_GET['clinic_id']) ? $_GET['clinic_id'] : null;
 
-    // Insert new comment
     $stmtInsertComment = $mysqli->prepare("INSERT INTO comments (clinic_id, user_id, user_name, comment_text, rating) VALUES (?, ?, ?, ?, ?)");
     $stmtInsertComment->bind_param("iissi", $clinic_id, $userId, $userName, $commentText, $_POST['rating_value']);
 
@@ -26,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmtInsertComment->close();
 
-    // Update the average rating and reviews count in the veterinary clinic table
+   
     $stmtUpdateClinicRating = $mysqli->prepare("UPDATE veterinary_clinic SET clinic_rating = (SELECT AVG(rating) FROM comments WHERE clinic_id = ?), reviews_count = (SELECT COUNT(*) FROM comments WHERE clinic_id = ?) WHERE clinic_id = ?");
     $stmtUpdateClinicRating->bind_param("iii", $clinic_id, $clinic_id, $clinic_id);
 

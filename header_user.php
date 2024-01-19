@@ -9,17 +9,17 @@
     <link href="styles/header_style.css" rel="stylesheet">
     <style>
         .navbar-light .navbar-nav .nav-link {
-            color: #ffffff; /* Изначальный цвет текста */
+            color: #ffffff; 
         }
 
         .navbar-light .navbar-nav .nav-link:hover {
-            color: #87CEFA; /* Цвет текста при наведении */
+            color: #87CEFA; 
         }
 
-        /* Стили для строки с именем пользователя */
+        
         .user-name {
-            color: #FFFF00 !important; /* Цвет текста имени пользователя */
-            margin-right: 15px; /* Отступ справа для выравнивания с кнопкой "Выйти" */
+            color: #FFFF00 !important; 
+            margin-right: 15px; 
         }
     </style>
 </head>
@@ -43,7 +43,7 @@
                     <li class="nav-item"><a href="help.php" class="nav-link">Обратиться за помощью</a></li>
                     <li class="nav-item"><a href="favourite.php" class="nav-link"><span>&#10084;</span></a></li>
                     <?php
-                    // Проверяем, установлена ли сессия пользователя
+                    
                     if (isset($_SESSION['user_name'])) {
                         // Выводим имя пользователя перед кнопкой "Выйти"
                         echo '<li class="nav-item"><p class="nav-link user-name">Привет, ' . $_SESSION['user_name'] . '!</p></li>';

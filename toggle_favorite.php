@@ -1,4 +1,4 @@
-<!-- Обработчик в файле toggle_favorite.php -->
+
 <?php
 session_start();
 require('db_connection.php');

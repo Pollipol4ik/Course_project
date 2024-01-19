@@ -5,7 +5,7 @@ require('db_connection.php');
 if (isset($_SESSION['doctor_id'])) {
     $doctorId = $_SESSION['doctor_id'];
 
-    // Добавлено условие для фильтрации по статусу чата
+    
     $statusCondition = '';
     $filterStatus = 'all';
 
@@ -25,7 +25,7 @@ if (isset($_SESSION['doctor_id'])) {
 
     $stmtUsers = $mysqli->prepare($sqlUsers);
 
-    // Передача параметра статуса, если он установлен
+    
     if (!empty($statusCondition)) {
         $stmtUsers->bind_param("is", $doctorId, $filterStatus);
     } else {
@@ -77,7 +77,7 @@ if (isset($_SESSION['doctor_id'])) {
         }
 
         .closed-chat {
-            background-color: #ccc; /* Цвет для закрытых чатов */
+            background-color: #ccc; 
         }
     </style>
 </head>
@@ -132,7 +132,7 @@ if (isset($_SESSION['doctor_id'])) {
                 </div>
                 <div class="modal-body">
                     <div class="message-container" id="chatMessages">
-                        <!-- Сюда будут загружаться сообщения из чата -->
+                       
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -170,7 +170,7 @@ if (isset($_SESSION['doctor_id'])) {
                 sendMessage(userId, messageId, message);
             });
 
-            // Очистка чата при закрытии модального окна
+            
             $('#chatModal').on('hidden.bs.modal', function () {
                 $('#chatMessages').empty();
             });
